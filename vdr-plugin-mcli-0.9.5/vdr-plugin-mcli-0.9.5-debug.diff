@@ -1,0 +1,61 @@
+diff -Nurp --no-dereference vdr-plugin-mcli-0.9.5.orig/device.c vdr-plugin-mcli-0.9.5/device.c
+--- vdr-plugin-mcli-0.9.5.orig/device.c	2021-02-02 08:54:46.000000000 +0100
++++ vdr-plugin-mcli-0.9.5/device.c	2021-02-03 22:02:34.326810644 +0100
+@@ -128,6 +128,11 @@ void cMcliDevice::SetTenData (tra_t * te
+ void cMcliDevice::SetEnable (bool val)
+ {
+ 	LOCK_THREAD;
++#ifdef DEBUG_TUNE
++	DEBUG_MASK(DEBUG_BIT_TUNE,
++	dsyslog("Mcli::%s: device %d: %d -> %d", __FUNCTION__, CardIndex()+1, m_enable, val);
++	)
++#endif
+ 	m_enable = val;
+ 	if (!m_enable) {
+ 		recv_stop (m_r);
+@@ -1134,11 +1139,13 @@ const cChannel *cMcliDevice::GetCurrentl
+ cString cMcliDevice::DeviceType(void) const
+ {
+ 	if (!m_enable) {
++#if 0
+ #ifdef DEBUG_RESOURCES
+ 		DEBUG_MASK(DEBUG_BIT_RESOURCES,
+ 		dsyslog("Mcli::%s: m_fetype=%d not enabled", __FUNCTION__, m_fetype);
+ 		)
+ #endif
++#endif
+ 		return "";
+ 	};
+ 	switch (m_fetype) {
+diff -Nurp --no-dereference vdr-plugin-mcli-0.9.5.orig/mcli.c vdr-plugin-mcli-0.9.5/mcli.c
+--- vdr-plugin-mcli-0.9.5.orig/mcli.c	2021-02-02 08:54:46.000000000 +0100
++++ vdr-plugin-mcli-0.9.5/mcli.c	2021-02-03 01:44:20.546932566 +0100
+@@ -368,7 +375,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_in
+ 					m_cam_present = true;
+ #ifdef DEBUG_RESOURCES
+ 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
+-					dsyslog("Found CAM");
++					if (!update) dsyslog("Found CAM %d", j);
+ 					)
+ #endif
+ 					cp->max = 1;
+@@ -376,7 +383,7 @@ int cPluginMcli::CAMPoolAdd(netceiver_in
+ 				case CA_MULTI_TRANSPONDER:
+ #ifdef DEBUG_RESOURCES
+ 					DEBUG_MASK(DEBUG_BIT_RESOURCES,
+-					dsyslog("Found CAM");
++					if (!update) dsyslog("Found CAM %d", j);
+ 					)
+ #endif
+ 					m_cam_present = true;
+diff -Nurp --no-dereference vdr-plugin-mcli-0.9.5.orig/mcli.h vdr-plugin-mcli-0.9.5/mcli.h
+--- vdr-plugin-mcli-0.9.5.orig/mcli.h	2021-02-02 08:54:46.000000000 +0100
++++ vdr-plugin-mcli-0.9.5/mcli.h	2021-02-03 01:19:30.656909035 +0100
+@@ -41,6 +41,7 @@
+ #define DEBUG_RESOURCES
+ #define DEBUG_FILTER
+ #define DEBUG_PIDS_ADD_DEL
++#define DEBUG_TUNE_PC
+ 
+ #define DEBUG_BIT_PIDS	 	0x01
+ #define DEBUG_BIT_TUNE_EXTRA	0x02
